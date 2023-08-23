@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generatePDF } from './pdf';
+import { generatePDF } from './pdf-forcaSeguranca';
 import ToolbarListagem from '@/components/toolbars/ToolbarListagem';
 import RootListLayout from '@/layouts/list-root/RootListLayout';
 import RootLayout from '@/layouts/root/RootLayout';
@@ -18,19 +18,27 @@ interface PageProps {
 const ForcaSegurancaListagem: NextPage<PageProps> = ({ forcasSeg }) => {
   const router = useRouter();
 
-  const handleDownloadClick = async () => {
-    try {
-      const pdfBytes = await generatePDF(forcasSeg);
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  function navToForcaSegurancaForm(autId?: string) {
+    if (autId !== undefined) {
+      router.replace(`forca-seg-form?id=${autId}`);
+    } else {
+      router.replace("forca-seg-form?id=novo");
+    }
+  }
 
-      const link = document.createElement('a');
+  async function handleDownloadClick() {
+    try {
+      const pdfBytes = await generatePDF(forcasSeg); // Gera o PDF com os dados existentes
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+
+      const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = 'forcaSeguranca.pdf';
+      link.download = "forcasSeguranca.pdf";
       link.click();
     } catch (error) {
-      console.error('Erro ao gerar o PDF:', error);
+      console.error("Erro ao gerar o PDF:", error);
     }
-  };
+  }
 
   return (
     <>
@@ -38,19 +46,19 @@ const ForcaSegurancaListagem: NextPage<PageProps> = ({ forcasSeg }) => {
         <NavTabs tabs={Navegacao.AmbienteDefensavel.PlanoDefesa.contatos.abas} />
         <ToolbarListagem
           textoBtnNovo="Nova"
-          onDownloadClick={handleDownloadClick}
+          onNewClick={() => navToForcaSegurancaForm()}
+          onDownloadClick={handleDownloadClick} // Adicionar a chamada para a função de download
         />
         <RootListLayout>
           <TabelaForcaSeguranca
-            forcasSegurancaList={forcasSeg} onEdit={function (itemId: string): void {
-              throw new Error('Function not implemented.');
-            }} // Restante das props
+            forcasSegurancaList={forcasSeg}
+            onEdit={navToForcaSegurancaForm}
           />
         </RootListLayout>
       </RootLayout>
     </>
   );
-}
+};
 
 export default ForcaSegurancaListagem;
 
@@ -61,8 +69,8 @@ export const getServerSideProps = withSessionSsr(
       return {
         redirect: {
           permanent: false,
-          destination: 'erros/erro',
-        },
+          destination: "erros/erro"
+        }
       };
     }
 
@@ -70,8 +78,7 @@ export const getServerSideProps = withSessionSsr(
 
     return {
       props: {
-        forcasSeg: JSON.parse(JSON.stringify(forcasSeg.itens)),
-      },
+        forcasSeg: JSON.parse(JSON.stringify(forcasSeg.itens))
+      }
     };
-  }
-);
+  })
